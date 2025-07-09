@@ -1,0 +1,167 @@
+function copierColonnesSelectionnees() {
+  const nomFeuilleSource = "Feuille 1";
+  const nomFeuilleCible = "Synthèse";
+
+  const colonnesAInclure = [ /* ... même liste que la tienne ... */ 
+    "Submission ID", 
+    "Respondent ID", 
+    "Submitted at",
+    "Adresse mail du répondant",
+    "Raison sociale",
+    "Adresse postale de l'établissement",
+    "Numéro de téléphone",
+    "Nom et prénom du/des dirigeants ou référent GPECT",
+    "Adresse mail du dirigeant ou référent GPECT",
+    "Secteur d'activité",
+    "Autre - secteur d'activité",
+    "Taille de l'entreprise",
+    "Nombre de CDI",
+    "Nombre de CDD",
+    "Nombre d'intérimaires",
+    "Nombre d'apprentissage ou alternance",
+    "De 18 à 30 ans",
+    "De 31 à 40 ans",
+    "De 41 à 50 ans",
+    "De 51 à 55 ans",
+    "De 56 à 60 ans",
+    "Plus de 60 ans",
+    "Ouvrier",
+    "Employé",
+    "Agent de maîtrise",
+    "Cadre",
+    "Grandes évolutions/mutations sur 5 ans🔮​",
+    "Autre - mutation/évolution",
+    "Anticipez vous des évolutions RH dans les 3 prochaines années ?",
+    "Autre - changement(s) RH",
+    "Evolution masse salariale",
+    "Chiffres évolution",
+    "Recrutement 2026",
+    "Recrutement 2027",
+    "Recrutement 2028",
+    "Recrutement 2029",
+    "Recrutement 2030",
+    "Premier métier",
+    "Autre - nom métier 1",
+    "Quand, combien recrutement 1",
+    "Deuxieme métier recrut",
+    "Autre - nom métier 2",
+    "Quand, combien recrutement 2",
+    "Troisième métier",
+    "Autre - nom métier 3",
+    "Quand, combien recrutement 3",
+    "Quatrième métier",
+    "Autre - nom métier 4",
+    "Quand, combien recrutement 4",
+    "Cinquième métier",
+    "Autre - nom métier 5",
+    "Quand, combien recrutement 5",
+    "Sixième métier",
+    "Autre - nom métier 6",
+    "Quand, combien recrutement 6",
+    "Septième métier",
+    "Autre - nom métier 7",
+    "Quand, combien recrutement 7",
+    "Huitième métier",
+    "Autre - nom métier 8",
+    "Quand, combien recrutement 8",
+    "Neuvième métier",
+    "Autre - nom métier 9",
+    "Quand, combien recrutement 9",
+    "Dixième métier",
+    "Autre - nom métier 10",
+    "Quand, combien recrutement 10",
+    "Niveaux études recherchés",
+    "Difficultés recrutement",
+    "Autre - difficulté recrutement",
+    "Dans quels domaines ? (exemple : numérique, management, langue...)",
+    "Souhaitez-vous développer ces compétences par : (cochez ce qui s'applique)",
+    "Autre - compétences à dev",
+    "Quels sont, selon vous, les atouts majeurs du territoire (attractivité, infrastructures, logements, ...)",
+    "Quelles sont, selon vous, les faiblesses majeures du territoire (manque de formations, mobilité, attractivité, ...)",
+    "Quelles sont vos principales attentes par rapport aux services de l'Etat aux collectivités et autres acteurs intervenant dans le domaine de l'emploi et de la formation ?",
+    "Avez-vous des attentes particulières par rapport à cette démarche GPECT ? ✍️"
+  ];
+
+  const expressionsASupprimer = [
+    "Pas dans la liste...",
+    "Autre",
+    "Autre \\(précisez\\)",
+    "Autres raisons"
+  ];
+
+  function nettoyerTexte(cellule) {
+    if (typeof cellule !== "string" || cellule.trim() === "") return cellule;
+
+    let texte = cellule;
+
+    expressionsASupprimer.forEach(exp => {
+      const regex = new RegExp(`(?:^|,\\s*)${exp}(?:\\s*,|$)`, "gi");
+      texte = texte.replace(regex, (match) => {
+        if (match.startsWith(",") && match.endsWith(",")) return ", ";
+        else return "";
+      });
+    });
+
+    return texte
+      .split(",")
+      .map(e => e.trim())
+      .filter(e => e.length > 0)
+      .join(", ");
+  }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const feuilleSource = ss.getSheetByName(nomFeuilleSource);
+  if (!feuilleSource) throw new Error("La feuille source spécifiée n'existe pas.");
+
+  let feuilleCible = ss.getSheetByName(nomFeuilleCible);
+  if (feuilleCible) ss.deleteSheet(feuilleCible);
+  feuilleCible = ss.insertSheet(nomFeuilleCible);
+
+  const donnees = feuilleSource.getDataRange().getValues();
+  const enTetes = donnees[0];
+
+  const indexColonnes = colonnesAInclure.map(nom => {
+    const idx = enTetes.indexOf(nom);
+    if (idx === -1) throw new Error(`Colonne "${nom}" introuvable`);
+    return idx;
+  });
+
+  const nouvellesEntetes = [];
+  const colonnesFusion = new Set();
+
+  for (let i = 0; i < colonnesAInclure.length; i++) {
+    const nom = colonnesAInclure[i];
+    if (nom.toLowerCase().includes("autre")) {
+      colonnesFusion.add(i);
+    } else {
+      nouvellesEntetes.push(nom);
+    }
+  }
+
+  const nouvellesDonnees = [nouvellesEntetes];
+
+  for (let i = 1; i < donnees.length; i++) {
+    const ligne = [];
+    for (let j = 0; j < colonnesAInclure.length; j++) {
+      let valeur = (donnees[i][indexColonnes[j]] || "").toString().trim();
+      valeur = nettoyerTexte(valeur); // 🧼 Nettoyage intégré
+
+      if (colonnesFusion.has(j)) {
+        const idxColAvant = j - 1;
+        const valeurAvant = (ligne[ligne.length - 1] || "").toString().trim();
+        if (valeur) {
+          if (valeurAvant) {
+            ligne[ligne.length - 1] = nettoyerTexte(valeurAvant + ", " + valeur);
+          } else {
+            ligne[ligne.length - 1] = valeur;
+          }
+        }
+      } else {
+        ligne.push(valeur);
+      }
+    }
+    nouvellesDonnees.push(ligne);
+  }
+
+  feuilleCible.getRange(1, 1, nouvellesDonnees.length, nouvellesEntetes.length).setValues(nouvellesDonnees);
+}
