@@ -76,10 +76,13 @@ function copierColonnesSelectionnees() {
     "Dans quels domaines ? (exemple : numérique, management, langue...)",
     "Souhaitez-vous développer ces compétences par : (cochez ce qui s'applique)",
     "Autre - compétences à dev",
-    "Quels sont, selon vous, les atouts majeurs du territoire (attractivité, infrastructures, logements, ...)",
-    "Quelles sont, selon vous, les faiblesses majeures du territoire (manque de formations, mobilité, attractivité, ...)",
-    "Quelles sont vos principales attentes par rapport aux services de l'Etat aux collectivités et autres acteurs intervenant dans le domaine de l'emploi et de la formation ?",
-    "Avez-vous des attentes particulières par rapport à cette démarche GPECT ? ✍️"
+    "Atouts majeurs",
+    "Autre - ajout atout",
+    "Faiblesses majeures",
+    "Autre - ajout faiblesse",
+    "Attentes intervenants emploi et formation",
+    "Autre - ajout attentes",
+    "Attentes démarche GPECT"
   ];
 
   const expressionsASupprimer = [
